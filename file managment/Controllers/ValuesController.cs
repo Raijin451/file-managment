@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using Microsoft.AspNetCore.Authorization;
+using System.Data.SqlClient;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace file_managment.Controllers
 {
@@ -12,7 +16,8 @@ namespace file_managment.Controllers
     public class ValuesController : ControllerBase
     {
         private readonly string _uploadsDirectory;
-
+        private readonly string _connectionString = "Server=.;Initial Catalog=file;User Id=hakan45;Password=hakan123;TrustServerCertificate=True";
+        
         public ValuesController(IWebHostEnvironment env)
         {
             _uploadsDirectory = Path.Combine(env.ContentRootPath, "Uploads");
@@ -30,20 +35,41 @@ namespace file_managment.Controllers
                 await fileUploadDto.File.CopyToAsync(stream);
             }
 
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var command = new SqlCommand("INSERT INTO Files (FileName, Size) VALUES (@FileName, @Size)", connection);
+                command.Parameters.AddWithValue("@FileName", fileUploadDto.File.FileName);
+                command.Parameters.AddWithValue("@Size", fileUploadDto.File.Length);
+
+                connection.Open();
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
+
             return Ok("File uploaded successfully");
         }
 
         [HttpGet("list")]
-        [Authorize]
         public IActionResult ListFiles()
         {
-            var files = Directory.GetFiles(_uploadsDirectory)
-                                .Select(filePath => new FileDTO
-                                {
-                                    FileName = Path.GetFileName(filePath),
-                                    Size = new FileInfo(filePath).Length
-                                })
-                                .ToList();
+            var files = new List<FileDTO>();
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var command = new SqlCommand("SELECT FileName, Size FROM Files", connection);
+                connection.Open();
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        files.Add(new FileDTO
+                        {
+                            FileName = reader.GetString(0),
+                            Size = reader.GetInt64(1)
+                        });
+                    }
+                }
+                connection.Close();
+            }
             return Ok(files);
         }
 
@@ -63,6 +89,16 @@ namespace file_managment.Controllers
             var filePath = Path.Combine(_uploadsDirectory, fileName);
             if (!System.IO.File.Exists(filePath))
                 return NotFound();
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var command = new SqlCommand("DELETE FROM Files WHERE FileName = @FileName", connection);
+                command.Parameters.AddWithValue("@FileName", fileName);
+
+                connection.Open();
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
 
             System.IO.File.Delete(filePath);
             return Ok("File deleted successfully");
