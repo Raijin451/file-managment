@@ -22,13 +22,12 @@ public class APIService
         return JsonConvert.DeserializeObject<T>(responseString);
     }
 
-    public async Task<HttpResponseMessage> PostAsync<T>(string endpoint, T data)
+    public async Task<HttpResponseMessage> PostAsync(string endpoint, MultipartFormDataContent form)
     {
-        var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}{endpoint}", data);
+        var response = await _httpClient.PostAsync($"{_apiBaseUrl}{endpoint}", form);
         response.EnsureSuccessStatusCode();
         return response;
     }
-
     public async Task<HttpResponseMessage> DeleteAsync(string endpoint)
     {
         var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}{endpoint}");

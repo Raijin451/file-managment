@@ -13,12 +13,12 @@ namespace file_managment.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ValuesController : ControllerBase
+    public class FilesController : ControllerBase
     {
         private readonly string _uploadsDirectory;
         private readonly string _connectionString = "Server=.;Initial Catalog=file;User Id=hakan45;Password=hakan123;TrustServerCertificate=True";
         
-        public ValuesController(IWebHostEnvironment env)
+        public FilesController(IWebHostEnvironment env)
         {
             _uploadsDirectory = Path.Combine(env.ContentRootPath, "Uploads");
         }
@@ -26,10 +26,9 @@ namespace file_managment.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> Upload([FromForm] IFormFile fileUploadDto)
         {
-            if (fileUploadDto == null || fileUploadDto == null || fileUploadDto.Length == 0)
+            if (fileUploadDto == null || fileUploadDto.Length == 0)
                 return BadRequest("Invalid file");
-            byte[] dataArray = new byte[100000];
-            new Random().NextBytes(dataArray);
+
             var filePath = Path.Combine(_uploadsDirectory, fileUploadDto.FileName);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
@@ -38,10 +37,9 @@ namespace file_managment.Controllers
 
             using (var connection = new SqlConnection(_connectionString))
             {
-                var command = new SqlCommand("INSERT INTO Files (FileName, Size,FileContent) VALUES (@FileName, @Size,@FileContent)", connection);
+                var command = new SqlCommand("INSERT INTO Files (FileName, Size) VALUES (@FileName, @Size)", connection);
                 command.Parameters.AddWithValue("@FileName", fileUploadDto.FileName);
                 command.Parameters.AddWithValue("@Size", fileUploadDto.Length);
-                command.Parameters.AddWithValue("@FileContent", dataArray);
 
                 connection.Open();
                 command.ExecuteNonQuery();

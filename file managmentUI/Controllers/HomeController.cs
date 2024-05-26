@@ -34,7 +34,7 @@ public class HomeController : Controller
             fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
 
             var form = new MultipartFormDataContent();
-            form.Add(fileContent, "File", file.FileName); // Ensure "File" matches the expected key in API
+            form.Add(fileContent, "fileUploadDto", file.FileName); // Ensure "File" matches the expected key in API
 
             var response = await _apiService.PostAsync("values/upload", form);
             response.EnsureSuccessStatusCode(); // Check if the request was successful
