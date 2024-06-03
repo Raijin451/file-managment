@@ -44,11 +44,11 @@ public class HomeController : Controller
     }
 
 
+
     public async Task<IActionResult> DownloadFile(string fileName)
     {
-        var response = await _apiService.GetAsync<HttpResponseMessage>($"values/download/{fileName}");
-        var stream = await response.Content.ReadAsStreamAsync();
-        return File(stream, response.Content.Headers.ContentType.ToString(), fileName);
+        var stream = await _apiService.GetFileStreamAsync($"values/download/{fileName}");
+        return File(stream, "application/octet-stream", fileName);
     }
 
     public async Task<IActionResult> DeleteFile(string fileName)

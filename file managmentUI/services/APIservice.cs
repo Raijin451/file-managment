@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.IO;
 
 public class APIService
 {
@@ -28,10 +29,19 @@ public class APIService
         response.EnsureSuccessStatusCode();
         return response;
     }
+
     public async Task<HttpResponseMessage> DeleteAsync(string endpoint)
     {
         var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}{endpoint}");
         response.EnsureSuccessStatusCode();
         return response;
+    }
+
+    // Yeni dosya indirme metodu
+    public async Task<Stream> GetFileStreamAsync(string endpoint)
+    {
+        var response = await _httpClient.GetAsync($"{_apiBaseUrl}{endpoint}");
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsStreamAsync();
     }
 }
