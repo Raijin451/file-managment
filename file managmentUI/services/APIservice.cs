@@ -37,7 +37,6 @@ public class APIService
         return response;
     }
 
-    // Yeni dosya indirme metodu
     public async Task<Stream> GetFileStreamAsync(string endpoint)
     {
         var response = await _httpClient.GetAsync($"{_apiBaseUrl}{endpoint}");
